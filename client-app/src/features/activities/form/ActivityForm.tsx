@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Button, Header, Segment } from 'semantic-ui-react';
+import { Button,  Header,  Segment } from 'semantic-ui-react';
 import { observer } from 'mobx-react-lite';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { v4 as uuid} from "uuid";
-
-import { useStore } from '../../../app/stores/store';
-import { Activity } from '../../../app/models/activity';
-import LoadingComponent from '../../../app/layout/loadingComponent';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
+
+import { useStore } from '../../../app/stores/store';
+import { ActivityFormValues } from '../../../app/models/activity';
+import LoadingComponent from '../../../app/layout/loadingComponent';
 import MyTextInput from '../../../app/common/form/MyTextInput';
 import MyTextArea from '../../../app/common/form/MyTextArea';
 import MySelectInput from '../../../app/common/form/MySelectInput';
@@ -19,19 +19,11 @@ export default observer(function ActivityForm() {
 
     const {activityStore} = useStore();
     const {createActivity, updateActivity, 
-        loading, loadActivity, loadingInitial} = activityStore;
+        loadActivity, loadingInitial} = activityStore;
     const {id} = useParams();
     const navigate = useNavigate();
 
-    const [activity, setActivity] = useState<Activity> ({
-        id: '',
-        title: '',
-        category: '',
-        description: '',
-        date: null,
-        city: '',
-        venue: ''
-    });
+    const [activity, setActivity] = useState<ActivityFormValues>(new ActivityFormValues());
 
     const validationSchema = Yup.object({
         title: Yup.string().required('The activity title is required'),
@@ -44,14 +36,16 @@ export default observer(function ActivityForm() {
 
     useEffect(() => {
         if (id) {
-            loadActivity(id).then(activity => setActivity(activity!));
+            loadActivity(id).then(activity => setActivity(new ActivityFormValues(activity)));
         }
     }, [id, loadActivity])
 
-    function handleFormSubmit(activity: Activity) {
+    function handleFormSubmit(activity: ActivityFormValues) {
         if (!activity.id) {
-            activity.id = uuid();
-            createActivity(activity).then(() => navigate(`/activities/${activity.id}`))
+            let newActivity = {
+                ...activity, id: uuid()
+            };
+            createActivity(newActivity).then(() => navigate(`/activities/${newActivity.id}`))
         }
         else {
             updateActivity(activity).then(() => navigate(`/activities/${activity.id}`))
@@ -64,7 +58,7 @@ export default observer(function ActivityForm() {
 
     return (
         <Segment clearing>
-            <Header context='Activity Details' sub color='teal' />
+           
             <Formik 
                 validationSchema={validationSchema}
                 enableReinitialize 
@@ -72,6 +66,7 @@ export default observer(function ActivityForm() {
                 onSubmit={values => handleFormSubmit(values)}>
                 {({ handleSubmit, isValid, isSubmitting, dirty }) => (
                 <Form className='ui form' onSubmit={handleSubmit} autoComplete='off'>
+                    <Header content='Activity Details' sub color='teal' />
                     <MyTextInput name='title' placeholder='Title' />
                     <MyTextArea rows={3} placeholder='Description' name='description' />
                     <MySelectInput options={categoryOptions} placeholder='Category' name='category' />
@@ -82,12 +77,12 @@ export default observer(function ActivityForm() {
                         timeCaption='time'
                         dateFormat='MMMM d, yyyy h:mm aa'
                     />
-                    <Header context='Location Details' sub color='teal' />
+                    <Header content='Location Details' sub color='teal' />
                     <MyTextInput placeholder='City' name='city' />
                     <MyTextInput placeholder='Venue' name='venue' />
                     <Button 
                         disabled={isSubmitting || !dirty || !isValid}
-                        loading={loading} 
+                        loading={isSubmitting} 
                         floated='right' 
                         positive 
                         type='submit' 
