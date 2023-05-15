@@ -5,7 +5,6 @@ import { format } from 'date-fns';
 
 import { Activity } from "../../../app/models/activity";
 import { useStore } from '../../../app/stores/store';
-import { act } from '@testing-library/react';
 
 const activityImageStyle = {
     filter: 'brightness(30%)'
