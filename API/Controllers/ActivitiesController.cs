@@ -3,15 +3,16 @@ using Domain;
 using Application.Activities;
 using Application;
 using Microsoft.AspNetCore.Authorization;
+using Application.Core;
 
 namespace API.Controllers
 {
     public class ActivitiesController : BaseApiController
     {
         [HttpGet] //api/activities
-        public async Task<IActionResult> GetActivities() 
+        public async Task<IActionResult> GetActivities([FromQuery]PagingParams param) 
         {
-        return HandleResult(await Mediator.Send(new List.Query()));
+        return HandlePagedResult(await Mediator.Send(new List.Query{Params = param}));
         }
 
         [HttpGet("{id}")] //api/activities/023d0c8a-37e0-42d1-a3df-f8c93173f218
